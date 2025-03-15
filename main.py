@@ -1,22 +1,21 @@
 import subprocess
 from fastapi import FastAPI, WebSocket
-from fastapi.middleware.cors import CORSMiddleware
 import socket
 import time
 import asyncio
 import uvicorn
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-# ✅ Enable CORS for WebSockets
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Serve static files (CSS, JS, images)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Serve the HTML file
+@app.get("/")
+async def serve_home():
+    return FileResponse("static/index.html")
 
 def tcp_ping(host, port=80, timeout=3):
     """
@@ -50,21 +49,24 @@ def tcp_ping(host, port=80, timeout=3):
 async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for real-time network latency testing.
+    
+    Listens for incoming messages containing comma-separated hostnames/IPs,
+    pings each one using TCP, and sends back their latency in milliseconds along with resolved domain names.
     """
     await websocket.accept()
     try:
         while True:
             data = await websocket.receive_text()
-            hosts = data.split(',')  
+            hosts = data.split(',')  # Allow multiple hosts
             results = {}
             for host in hosts:
-                latency, domain_name = tcp_ping(host.strip(), 443)
+                latency, domain_name = tcp_ping(host.strip(), 443)  # Testing HTTPS (port 443)
                 results[host.strip()] = {"latency": latency, "domain": domain_name}
-            print(f"Sending results: {results}")
+            print(f"Sending results: {results}")  # Debugging output
             await websocket.send_json(results)
-            await asyncio.sleep(2)
+            await asyncio.sleep(2)  # Update every 2 seconds
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        print(f"WebSocket error: {e}")  # Debugging output
         await websocket.close()
 
 if __name__ == "__main__":
