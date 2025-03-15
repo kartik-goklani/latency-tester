@@ -1,11 +1,15 @@
 import subprocess
 from fastapi import FastAPI, WebSocket
+from fastapi.staticfiles import StaticFiles
 import socket
 import time
 import asyncio
 import uvicorn
 
 app = FastAPI()
+
+# ✅ Serve static files (HTML, CSS, JS)
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 def tcp_ping(host, port=80, timeout=3):
     """
@@ -39,24 +43,21 @@ def tcp_ping(host, port=80, timeout=3):
 async def websocket_endpoint(websocket: WebSocket):
     """
     WebSocket endpoint for real-time network latency testing.
-    
-    Listens for incoming messages containing comma-separated hostnames/IPs,
-    pings each one using TCP, and sends back their latency in milliseconds along with resolved domain names.
     """
     await websocket.accept()
     try:
         while True:
             data = await websocket.receive_text()
-            hosts = data.split(',')  # Allow multiple hosts
+            hosts = data.split(',')  
             results = {}
             for host in hosts:
-                latency, domain_name = tcp_ping(host.strip(), 443)  # Testing HTTPS (port 443)
+                latency, domain_name = tcp_ping(host.strip(), 443)
                 results[host.strip()] = {"latency": latency, "domain": domain_name}
-            print(f"Sending results: {results}")  # Debugging output
+            print(f"Sending results: {results}")
             await websocket.send_json(results)
-            await asyncio.sleep(2)  # Update every 2 seconds
+            await asyncio.sleep(2)
     except Exception as e:
-        print(f"WebSocket error: {e}")  # Debugging output
+        print(f"WebSocket error: {e}")
         await websocket.close()
 
 if __name__ == "__main__":
