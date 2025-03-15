@@ -1,12 +1,22 @@
 import subprocess
 from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import socket
 import time
 import asyncio
 import uvicorn
 
 app = FastAPI()
+
+# ✅ Enable CORS for WebSockets
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ✅ Serve static files (HTML, CSS, JS)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
