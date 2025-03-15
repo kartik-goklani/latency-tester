@@ -18,8 +18,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Serve static files (HTML, CSS, JS)
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 def tcp_ping(host, port=80, timeout=3):
     """
