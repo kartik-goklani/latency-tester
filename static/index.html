@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Latency Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 40px;
+        }
+
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+        }
+
+        table {
+            width: 60%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+    <script>
+        let socket;
+
+        function connectWebSocket() {
+            socket = new WebSocket("https://latency-tester.onrender.com");
+
+            socket.onmessage = function(event) {
+                let results = JSON.parse(event.data);
+                let output = `
+                    <tr>
+                        <th>Host</th>
+                        <th>Latency (ms)</th>
+                        <th>Domain Name</th>
+                    </tr>
+                `;
+
+                for (let host in results) {
+                    output += `
+                        <tr>
+                            <td>${host}</td>
+                            <td>${results[host].latency}</td>
+                            <td>${results[host].domain}</td>
+                        </tr>
+                    `;
+                }
+
+                document.getElementById("results").innerHTML = output;
+            };
+        }
+
+        function sendPingRequest() {
+            let host = document.getElementById("host").value.trim();
+
+            if (host === "") {
+                alert("Please enter an IP or domain.");
+                return;
+            }
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(host);
+            } else {
+                alert("WebSocket connection is not open. Refresh the page and try again.");
+            }
+        }
+
+        window.onload = connectWebSocket;
+    </script>
+</head>
+<body>
+    <h2>Network Latency Tester</h2>
+    <input type="text" id="host" placeholder="Enter IP or domain">
+    <button onclick="sendPingRequest()">Test Latency</button>
+
+    <table id="results">
+        <tr>
+            <th>Host</th>
+            <th>Latency (ms)</th>
+            <th>Domain Name</th>
+        </tr>
+    </table>
+</body>
+</html>
