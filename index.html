@@ -40,7 +40,7 @@
         let socket;
 
         function connectWebSocket() {
-            socket = new WebSocket("https://latency-tester.onrender.com");
+            socket = new WebSocket("wss://latency-tester.onrender.com/ws");
 
             socket.onmessage = function(event) {
                 let results = JSON.parse(event.data);
