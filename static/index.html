@@ -128,7 +128,7 @@
       let socket;
 
       function connectWebSocket() {
-        socket = new WebSocket("ws://127.0.0.1:8000/ws");
+        socket = new WebSocket("wss://latency-tester.onrender.com/ws");
 
         socket.onmessage = function (event) {
           let results = JSON.parse(event.data);
